@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class LoginViewController: UIViewController {
 
@@ -34,15 +35,18 @@ class LoginViewController: UIViewController {
         //  Anonymously log users in
         //  switch view by setting navigation controller as root view controller
         
-        //  Create a main storyboard instance
+        FIRAuth.auth()?.signInAnonymouslyWithCompletion({   ( anonymousUser: FIRUser?, error: NSError?) in
+            if error == nil {
+                print("UserId: \(anonymousUser!.uid)")
+            } else {
+                print(error!.localizedDescription)
+                return
+            }
+        })
+        
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        
-        //  From main storyboard instantiate a navigation controller
         let naviVC = storyboard.instantiateViewControllerWithIdentifier("NavigationVC")as! UINavigationController
-        //  Get the app delegate
         let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        
-        //  Set Navigation Controller as root view controller
         appDelegate.window?.rootViewController = naviVC
     }
 
