@@ -6,6 +6,7 @@ target 'GoChat' do
   use_frameworks!
     pod 'Firebase'
     pod 'Firebase/Auth'
+    pod 'GoogleSignIn'
   # Pods for GoChat
 
 end
