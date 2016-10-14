@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import FirebaseAuth
+
 
 class LoginViewController: UIViewController {
 
@@ -34,20 +34,7 @@ class LoginViewController: UIViewController {
         print("login anonymously did tapped")
         //  Anonymously log users in
         //  switch view by setting navigation controller as root view controller
-        
-        FIRAuth.auth()?.signInAnonymouslyWithCompletion({   ( anonymousUser: FIRUser?, error: NSError?) in
-            if error == nil {
-                print("UserId: \(anonymousUser!.uid)")
-            } else {
-                print(error!.localizedDescription)
-                return
-            }
-        })
-        
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let naviVC = storyboard.instantiateViewControllerWithIdentifier("NavigationVC")as! UINavigationController
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        appDelegate.window?.rootViewController = naviVC
+        Helper.helper.loginAnonymously()
     }
 
     @IBAction func googleLoginDidTapped(sender: AnyObject) {
