@@ -7,9 +7,10 @@
 //
 
 import UIKit
+import GoogleSignIn
 
 
-class LoginViewController: UIViewController {
+class LoginViewController: UIViewController, GIDSignInUIDelegate, GIDSignInDelegate {
 
     @IBOutlet weak var anonymousButton: UIButton!
     
@@ -21,8 +22,9 @@ class LoginViewController: UIViewController {
         //  Set border color
         anonymousButton.layer.borderWidth = 2.0
         anonymousButton.layer.borderColor = UIColor.whiteColor().CGColor
-        
-        
+        GIDSignIn.sharedInstance().clientID = "13431354186-kmfhhg2ducva7mm6d258jrcstmvnd2fu.apps.googleusercontent.com"
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().delegate = self
     }
 
     override func didReceiveMemoryWarning() {
@@ -38,18 +40,19 @@ class LoginViewController: UIViewController {
     }
 
     @IBAction func googleLoginDidTapped(sender: AnyObject) {
-        //  Create a main storyboard instance
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
         
-        //  From main storyboard instantiate a navigation controller
-        let naviVC = storyboard.instantiateViewControllerWithIdentifier("NavigationVC")as! UINavigationController
-        //  Get the app delegate
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        
-        //  Set Navigation Controller as root view controller
-        appDelegate.window?.rootViewController = naviVC
+        GIDSignIn.sharedInstance().signIn()
     }
     
+    func signIn(signIn: GIDSignIn!, didSignInForUser user: GIDGoogleUser!, withError error: NSError!) {
+        if error != nil{
+            print(error!.localizedDescription)
+            return
+        }
+        print(user.authentication)
+        Helper.helper.loginWithGoogle(user.authentication)
+
+    }
     /*
     // MARK: - Navigation
 
