@@ -24,11 +24,38 @@ class ChatViewController: JSQMessagesViewController {
         print(senderId)
         print(senderDisplayName)
         messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, text: text))
+        collectionView.reloadData()
         print(messages)
     }
     
     override func didPressAccessoryButton(sender: UIButton!) {
         print("didPressAccessoryButton")
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
+    override func collectionView(collectionView: JSQMessagesCollectionView!, messageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageData! {
+        return messages[indexPath.item]
+    }
+    
+    override func collectionView(collectionView: JSQMessagesCollectionView!, avatarImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageAvatarImageDataSource! {
+        return nil
+    }
+    
+    override func collectionView(collectionView: JSQMessagesCollectionView!, messageBubbleImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageBubbleImageDataSource! {
+        let bubbleFactory = JSQMessagesBubbleImageFactory()
+        return bubbleFactory.outgoingMessagesBubbleImageWithColor(.blackColor())
+    }
+    
+    override func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print("number of message \(messages.count)")
+        return messages.count
+    }
+    
+    override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let cell = super.collectionView(collectionView, cellForItemAtIndexPath: indexPath) as! JSQMessagesCollectionViewCell
+        return cell
     }
     
     override func didReceiveMemoryWarning() {
@@ -59,4 +86,17 @@ class ChatViewController: JSQMessagesViewController {
     }
     */
 
+}
+
+extension ChatViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
+        print("did finish picking")
+        // get the image
+        print(info)
+        let picture = info[UIImagePickerControllerOriginalImage] as? UIImage
+        let photo = JSQPhotoMediaItem(image: picture)
+        messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, media: photo))
+        self.dismissViewControllerAnimated(true, completion: nil)
+        collectionView.reloadData()
+    }
 }
