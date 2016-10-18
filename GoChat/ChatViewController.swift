@@ -16,30 +16,53 @@ import FirebaseAuth
 
 class ChatViewController: JSQMessagesViewController {
     var messages = [JSQMessage]()
+    var avatarDict = [String: JSQMessagesAvatarImage]()
+    
+    
     var messageRef = FIRDatabase.database().reference().child("messages")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let currentUser = FIRAuth.auth()?.currentUser
-        
-        self.senderId = currentUser!.uid
-        self.senderDisplayName = "june"
-        // Do any additional setup after loading the view.
-    
-        //  messageRef.childByAutoId().setValue("Test_1")
-        //  messageRef.childByAutoId().setValue("Test-2")
-        messageRef.observeEventType(FIRDataEventType.ChildAdded) {(snapshot: FIRDataSnapshot) in
-            print(snapshot.value)
-            print("test")
-            if let dict = snapshot.value as? String {
-                print(dict)
+        if let currentUser = FIRAuth.auth()?.currentUser{
+            self.senderId = currentUser.uid
+            
+            if currentUser.anonymous == true{
+                self.senderDisplayName = "anonymous"
+            }else{
+                self.senderDisplayName = "\(currentUser.displayName!)"
             }
-        //    if let dict = snapshot.value as? NSDictionary {
-        //        print(dict)
-        //    }
+            
         }
-         observeMessages()
+        
+        observeMessages()
+    }
+    
+    func observeUsers(id: String){
+        
+        FIRDatabase.database().reference().child("users").child(id).observeEventType(.Value, withBlock: { snapshot in
+            if let dict = snapshot.value as? [String: AnyObject]{
+                let avatarUrl = dict["profileUrl"] as! String
+            
+                self.setupAvatar(avatarUrl, messageId: id)
+            }
+            
+        })
+    }
+    
+    func setupAvatar(url: String, messageId: String){
+        if url != "" {
+            let fileUrl = NSURL(string: url)
+            let data = NSData(contentsOfURL: fileUrl!)
+            let image = UIImage(data: data!)
+            let userImg = JSQMessagesAvatarImageFactory.avatarImageWithImage(image, diameter: 30)
+            avatarDict[messageId] = userImg
+        } else{
+            
+            avatarDict[messageId] = JSQMessagesAvatarImageFactory.avatarImageWithImage(UIImage(named: "profileImage"), diameter: 30)
+        }
+        
+        collectionView.reloadData()
     }
     
     func observeMessages() {
@@ -49,6 +72,8 @@ class ChatViewController: JSQMessagesViewController {
                 let mediaType = dict["MediaType"] as! String
                 let senderId = dict["senderId"] as! String
                 let senderName = dict["senderName"] as! String
+                
+                self.observeUsers(senderId)
                 
                 switch mediaType {
                 case "TEXT":
@@ -141,7 +166,11 @@ class ChatViewController: JSQMessagesViewController {
     }
     
     override func collectionView(collectionView: JSQMessagesCollectionView!, avatarImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageAvatarImageDataSource! {
-        return nil
+        
+        let message = messages[indexPath.item]
+        
+        return avatarDict[message.senderId]
+//        return JSQMessagesAvatarImageFactory.avatarImageWithImage(UIImage(named: "profileimage"), diameter: 30)
     }
     
     override func collectionView(collectionView: JSQMessagesCollectionView!, messageBubbleImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageBubbleImageDataSource! {

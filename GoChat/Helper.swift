@@ -8,8 +8,10 @@
 
 import Foundation
 import FirebaseAuth
+import FirebaseDatabase
 import UIKit
 import GoogleSignIn
+
 
 //로그인 한번만 가능하게, 뷰 옮길 때.. 쓰는 헬퍼
 class Helper {
@@ -22,6 +24,9 @@ class Helper {
         FIRAuth.auth()?.signInAnonymouslyWithCompletion({   ( anonymousUser: FIRUser?, error: NSError?) in
             if error == nil {
                 print("UserId: \(anonymousUser!.uid)")
+                let newUser = FIRDatabase.database().reference().child("users").child(anonymousUser!.uid)
+                
+                newUser.setValue(["displayname": "Anonymous", "id": "\(anonymousUser!.uid)", "profileUrl": ""])
                 
                 self.switchToNavigationViewController()
                 
@@ -41,6 +46,12 @@ class Helper {
             }else{
                 print(user?.email)
                 print(user?.displayName)
+                
+                let newUser = FIRDatabase.database().reference().child("users").child(user!.uid)
+                
+                newUser.setValue(["displayname": "\(user!.displayName!)", "id": "\(user!.uid)", "profileUrl": "\(user!.photoURL!)"])
+                
+                
                 self.switchToNavigationViewController()
                 }
             })
