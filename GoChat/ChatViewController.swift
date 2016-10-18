@@ -36,18 +36,43 @@ class ChatViewController: JSQMessagesViewController {
         //        print(dict)
         //    }
         }
-        // observeMessages()
+         observeMessages()
     }
     
     func observeMessages() {
         messageRef.observeEventType(.ChildAdded, withBlock: { snapshot in
             print(snapshot.value)
             if let dict = snapshot.value as? [String: AnyObject] {
-                let MediaType = dict["MediaType"] as! String
+                let mediaType = dict["MediaType"] as! String
                 let senderId = dict["senderId"] as! String
                 let senderName = dict["senderName"] as! String
-                let text = dict["text"] as! String
-                self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, text: text))
+                
+                switch mediaType {
+                case "TEXT":
+                    
+                    let text = dict["text"] as! String
+                    self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, text: text))
+                    
+                case "PHOTO":
+                    
+                    let fileUrl = dict["fileUrl"] as! String
+                    let url = NSURL(string: fileUrl)
+                    let data = NSData(contentsOfURL: url!)
+                    let picture = UIImage(data: data!)
+                    let photo = JSQPhotoMediaItem(image: picture)
+                    self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, media: photo))
+                    
+                case "VIDEO":
+                    
+                    let fileUrl = dict["fileUrl"] as! String
+                    let video = NSURL(string: fileUrl)
+                    let videoItem = JSQVideoMediaItem(fileURL: video, isReadyToPlay: true)
+                    self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, media: videoItem))
+                    
+                default:
+                    print("Unknown Data Type")
+                    
+                }
                 self.collectionView.reloadData()
             }
         })
