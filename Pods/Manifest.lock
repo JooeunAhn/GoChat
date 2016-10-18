@@ -10,6 +10,9 @@ PODS:
   - Firebase/Database (3.7.1):
     - Firebase/Core
     - FirebaseDatabase (= 3.0.3)
+  - Firebase/Storage (3.7.1):
+    - Firebase/Core
+    - FirebaseStorage (= 1.0.3)
   - FirebaseAnalytics (3.4.4):
     - FirebaseCore (~> 3.4)
     - FirebaseInstanceID (~> 1.0)
@@ -25,6 +28,9 @@ PODS:
   - FirebaseDatabase (3.0.3):
     - FirebaseAnalytics (~> 3.3)
   - FirebaseInstanceID (1.0.8)
+  - FirebaseStorage (1.0.3):
+    - FirebaseAnalytics (~> 3.3)
+    - GoogleNetworkingUtilities (~> 1.2)
   - GoogleAppUtilities (1.1.2):
     - GoogleSymbolUtilities (~> 1.1)
   - GoogleAuthUtilities (2.0.2):
@@ -50,6 +56,7 @@ DEPENDENCIES:
   - Firebase
   - Firebase/Auth
   - Firebase/Database
+  - Firebase/Storage
   - GoogleSignIn
   - JSQMessagesViewController
 
@@ -60,6 +67,7 @@ SPEC CHECKSUMS:
   FirebaseCore: 5a885548bbc5f0c410b04f8e9ac9d73ff1221907
   FirebaseDatabase: 750a4a0fe18ef114318876fd654b2d9c671e0992
   FirebaseInstanceID: ba1e640935235e5fac39dfa816fe7660e72e1a8a
+  FirebaseStorage: 3992817bf405f5c1a4f8349678d22724cd0ef509
   GoogleAppUtilities: a8a552aa74f6597f805e45b5a3962766c3134973
   GoogleAuthUtilities: ccad2e0a9284699973ff57c0dd24c3893657fda4
   GoogleInterchangeUtilities: d5bc4d88d5b661ab72f9d70c58d02ca8c27ad1f7
@@ -70,6 +78,6 @@ SPEC CHECKSUMS:
   JSQMessagesViewController: 39fed975e3c9f8eba7292071e29eeb541d105e66
   JSQSystemSoundPlayer: c5850e77a4363ffd374cd851154b9af93264ed8d
 
-PODFILE CHECKSUM: 41d8d917c3a3279e361f414e0cf342695198fe97
+PODFILE CHECKSUM: 8de1034d0f2d253704ad94c7d3f3c26a19ef9264
 
 COCOAPODS: 1.0.1

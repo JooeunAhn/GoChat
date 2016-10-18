@@ -11,6 +11,8 @@ import AVKit
 import JSQMessagesViewController
 import MobileCoreServices
 import FirebaseDatabase
+import FirebaseStorage
+import FirebaseAuth
 
 class ChatViewController: JSQMessagesViewController {
     var messages = [JSQMessage]()
@@ -34,7 +36,7 @@ class ChatViewController: JSQMessagesViewController {
         //        print(dict)
         //    }
         }
-        observeMessages()
+        // observeMessages()
     }
     
     func observeMessages() {
@@ -146,17 +148,52 @@ class ChatViewController: JSQMessagesViewController {
         //  Set Login view Controller as root view controller
         appDelegate.window?.rootViewController = LoginVC
     }
+    
+    func sendMedia(picture: UIImage?, video: NSURL?){
+        
+        if let picture = picture {
+            let filePath = "\(FIRAuth.auth()!.currentUser!)/\(NSDate.timeIntervalSinceReferenceDate())"
+            //let data = UIImageJPEGRepresentation(picture!, 1)
+            // 압축버젼
+            let data = UIImageJPEGRepresentation(picture, 0.1)
+            let metadata = FIRStorageMetadata()
+            metadata.contentType = "image/jpg"
+            FIRStorage.storage().reference().child(filePath).putData(data!, metadata: metadata){ (metadata, error) in
+                if error != nil {
+                    print(error)
+                    return
+                }else {
+                    let fileUrl = metadata!.downloadURLs![0].absoluteString
+                    let newMessage = self.messageRef.childByAutoId()
+                    let messageData = ["fileUrl": fileUrl, "senderId": self.senderId, "senderName": self.senderDisplayName, "MediaType": "PHOTO"]
+                    newMessage.setValue(messageData)
+                }
+                    
+                }
+            
+        }else if let video = video{
+            let filePath = "\(FIRAuth.auth()!.currentUser!)/\(NSDate.timeIntervalSinceReferenceDate())"
+            //let data = UIImageJPEGRepresentation(picture!, 1)
+            // 압축버젼
+            let data = NSData(contentsOfURL: video)
+            let metadata = FIRStorageMetadata()
+            metadata.contentType = "video/mp4"
+            FIRStorage.storage().reference().child(filePath).putData(data!, metadata: metadata){ (metadata, error) in
+                if error != nil {
+                    print(error)
+                    return
+                }else {
+                    let fileUrl = metadata!.downloadURLs![0].absoluteString
+                    let newMessage = self.messageRef.childByAutoId()
+                    let messageData = ["fileUrl": fileUrl, "senderId": self.senderId, "senderName": self.senderDisplayName, "MediaType": "VIDEO"]
+                    newMessage.setValue(messageData)
+                }
+                
+            }
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        }
+        
     }
-    */
-
 }
 
 extension ChatViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
@@ -165,11 +202,14 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
         // get the image
         print(info)
         if let picture = info[UIImagePickerControllerOriginalImage] as? UIImage{
-        let photo = JSQPhotoMediaItem(image: picture)
-        messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, media: photo))
+            let photo = JSQPhotoMediaItem(image: picture)
+            messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, media: photo))
+            sendMedia(picture, video: nil)
+        
         } else if let video = info[UIImagePickerControllerMediaURL] as? NSURL {
             let videoItem = JSQVideoMediaItem(fileURL: video, isReadyToPlay: true)
             messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, media: videoItem))
+            sendMedia(nil, video: video)
         }
         self.dismissViewControllerAnimated(true, completion: nil)
         collectionView.reloadData()
