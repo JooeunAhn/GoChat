@@ -14,15 +14,13 @@ import FirebaseDatabase
 
 class ChatViewController: JSQMessagesViewController {
     var messages = [JSQMessage]()
+    var messageRef = FIRDatabase.database().reference().child("messages")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.senderId = "1"
         self.senderDisplayName = "june"
         // Do any additional setup after loading the view.
-        let rootRef = FIRDatabase.database().reference()
-        let messageRef = rootRef.child("messages")
-        print(rootRef)
-        print(messageRef)
     
         //  messageRef.childByAutoId().setValue("Test_1")
         //  messageRef.childByAutoId().setValue("Test-2")
@@ -36,16 +34,33 @@ class ChatViewController: JSQMessagesViewController {
         //        print(dict)
         //    }
         }
+        observeMessages()
     }
     
+    func observeMessages() {
+        messageRef.observeEventType(.ChildAdded, withBlock: { snapshot in
+            print(snapshot.value)
+            if let dict = snapshot.value as? [String: AnyObject] {
+                let MediaType = dict["MediaType"] as! String
+                let senderId = dict["senderId"] as! String
+                let senderName = dict["senderName"] as! String
+                let text = dict["text"] as! String
+                self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, text: text))
+                self.collectionView.reloadData()
+            }
+        })
+    }
+    
+    
     override func didPressSendButton(button: UIButton!, withMessageText text: String!, senderId: String!, senderDisplayName: String!, date: NSDate!) {
-        print("didPressSendButton")
-        print("\(text)")
-        print(senderId)
-        print(senderDisplayName)
-        messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, text: text))
-        collectionView.reloadData()
-        print(messages)
+        //messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, text: text))
+        //collectionView.reloadData()
+        //print(messages)
+        
+        let newMessage = messageRef.childByAutoId()
+        let messageData = ["text": text, "senderId": senderId, "senderName": senderDisplayName, "MediaType": "TEXT"]
+        newMessage.setValue(messageData)
+        
     }
     
     override func didPressAccessoryButton(sender: UIButton!) {
