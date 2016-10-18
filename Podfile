@@ -8,6 +8,7 @@ target 'GoChat' do
     pod 'Firebase/Auth'
     pod 'GoogleSignIn'
     pod 'JSQMessagesViewController'
+    pod 'Firebase/Database'
   # Pods for GoChat
 
 end
