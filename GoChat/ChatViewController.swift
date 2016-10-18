@@ -26,11 +26,15 @@ class ChatViewController: JSQMessagesViewController {
     
         //  messageRef.childByAutoId().setValue("Test_1")
         //  messageRef.childByAutoId().setValue("Test-2")
-        messageRef.observeEventType(FIRDataEventType.Value) {(snapshot: FIRDataSnapshot) in
+        messageRef.observeEventType(FIRDataEventType.ChildAdded) {(snapshot: FIRDataSnapshot) in
             print(snapshot.value)
-            if let dict = snapshot.value as? NSDictionary {
+            print("test")
+            if let dict = snapshot.value as? String {
                 print(dict)
             }
+        //    if let dict = snapshot.value as? NSDictionary {
+        //        print(dict)
+        //    }
         }
     }
     
