@@ -20,7 +20,10 @@ class ChatViewController: JSQMessagesViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.senderId = "1"
+        
+        let currentUser = FIRAuth.auth()?.currentUser
+        
+        self.senderId = currentUser!.uid
         self.senderDisplayName = "june"
         // Do any additional setup after loading the view.
     
@@ -62,12 +65,25 @@ class ChatViewController: JSQMessagesViewController {
                     let photo = JSQPhotoMediaItem(image: picture)
                     self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, media: photo))
                     
+                    if self.senderId == senderId{
+                        photo.appliesMediaViewMaskAsOutgoing = true
+                    }else{
+                        photo.appliesMediaViewMaskAsOutgoing = false
+                    }
+                    
                 case "VIDEO":
                     
                     let fileUrl = dict["fileUrl"] as! String
                     let video = NSURL(string: fileUrl)
                     let videoItem = JSQVideoMediaItem(fileURL: video, isReadyToPlay: true)
                     self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, media: videoItem))
+                    
+                    
+                    if self.senderId == senderId{
+                        videoItem.appliesMediaViewMaskAsOutgoing = true
+                    }else{
+                        videoItem.appliesMediaViewMaskAsOutgoing = false
+                    }
                     
                 default:
                     print("Unknown Data Type")
@@ -87,7 +103,7 @@ class ChatViewController: JSQMessagesViewController {
         let newMessage = messageRef.childByAutoId()
         let messageData = ["text": text, "senderId": senderId, "senderName": senderDisplayName, "MediaType": "TEXT"]
         newMessage.setValue(messageData)
-        
+        self.finishSendingMessage()
     }
     
     override func didPressAccessoryButton(sender: UIButton!) {
@@ -129,8 +145,13 @@ class ChatViewController: JSQMessagesViewController {
     }
     
     override func collectionView(collectionView: JSQMessagesCollectionView!, messageBubbleImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageBubbleImageDataSource! {
+        let message = messages[indexPath.item]
         let bubbleFactory = JSQMessagesBubbleImageFactory()
-        return bubbleFactory.outgoingMessagesBubbleImageWithColor(.blackColor())
+        if message.senderId == self.senderId{
+            return bubbleFactory.outgoingMessagesBubbleImageWithColor(.blackColor())
+        }else{
+            return bubbleFactory.incomingMessagesBubbleImageWithColor(.blueColor())
+        }
     }
     
     override func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -162,6 +183,14 @@ class ChatViewController: JSQMessagesViewController {
     }
     
     @IBAction func logoutDidTapped(sender: AnyObject) {
+        
+        do {
+            try FIRAuth.auth()?.signOut()
+        }catch let error {
+            print(error)
+        }
+        
+        
         //  Create a main storyboard instance
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         
@@ -227,13 +256,10 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
         // get the image
         print(info)
         if let picture = info[UIImagePickerControllerOriginalImage] as? UIImage{
-            let photo = JSQPhotoMediaItem(image: picture)
-            messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, media: photo))
             sendMedia(picture, video: nil)
         
         } else if let video = info[UIImagePickerControllerMediaURL] as? NSURL {
-            let videoItem = JSQVideoMediaItem(fileURL: video, isReadyToPlay: true)
-            messages.append(JSQMessage(senderId: senderId, displayName: senderDisplayName, media: videoItem))
+            
             sendMedia(nil, video: video)
         }
         self.dismissViewControllerAnimated(true, completion: nil)
