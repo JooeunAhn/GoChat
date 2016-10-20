@@ -17,9 +17,8 @@ import FirebaseAuth
 class ChatViewController: JSQMessagesViewController {
     var messages = [JSQMessage]()
     var avatarDict = [String: JSQMessagesAvatarImage]()
-    
-    
     var messageRef = FIRDatabase.database().reference().child("messages")
+    let photoCache = NSCache()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,13 +66,14 @@ class ChatViewController: JSQMessagesViewController {
     
     func observeMessages() {
         messageRef.observeEventType(.ChildAdded, withBlock: { snapshot in
-            print(snapshot.value)
             if let dict = snapshot.value as? [String: AnyObject] {
                 let mediaType = dict["MediaType"] as! String
                 let senderId = dict["senderId"] as! String
                 let senderName = dict["senderName"] as! String
                 
                 self.observeUsers(senderId)
+                
+                let startTime = CFAbsoluteTimeGetCurrent()
                 
                 switch mediaType {
                 case "TEXT":
@@ -82,12 +82,28 @@ class ChatViewController: JSQMessagesViewController {
                     self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, text: text))
                     
                 case "PHOTO":
-                    
+                    var photo = JSQPhotoMediaItem(image: nil)
                     let fileUrl = dict["fileUrl"] as! String
-                    let url = NSURL(string: fileUrl)
-                    let data = NSData(contentsOfURL: url!)
-                    let picture = UIImage(data: data!)
-                    let photo = JSQPhotoMediaItem(image: picture)
+                    
+                    if let cachePhoto = self.photoCache.objectForKey(fileUrl) as? JSQPhotoMediaItem {
+                        photo = cachePhoto
+                        self.collectionView.reloadData()
+                    }else{
+                        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), {
+                            let url = NSURL(string: fileUrl)
+                            let data = NSData(contentsOfURL: url!)
+                            dispatch_async(dispatch_get_main_queue(), {
+                                let picture = UIImage(data: data!)
+                                photo.image = picture
+                                self.collectionView.reloadData()
+                                self.photoCache.setObject(photo, forKey: fileUrl)
+                            })
+                        })
+                    }
+                    
+
+                    
+                        print("is it a background thread? \(NSThread.currentThread())")
                     self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, media: photo))
                     
                     if self.senderId == senderId{
@@ -102,7 +118,6 @@ class ChatViewController: JSQMessagesViewController {
                     let video = NSURL(string: fileUrl)
                     let videoItem = JSQVideoMediaItem(fileURL: video, isReadyToPlay: true)
                     self.messages.append(JSQMessage(senderId: senderId, displayName: senderName, media: videoItem))
-                    
                     
                     if self.senderId == senderId{
                         videoItem.appliesMediaViewMaskAsOutgoing = true
@@ -238,6 +253,7 @@ class ChatViewController: JSQMessagesViewController {
             let filePath = "\(FIRAuth.auth()!.currentUser!)/\(NSDate.timeIntervalSinceReferenceDate())"
             //let data = UIImageJPEGRepresentation(picture!, 1)
             // 압축버젼
+            
             let data = UIImageJPEGRepresentation(picture, 0.1)
             let metadata = FIRStorageMetadata()
             metadata.contentType = "image/jpg"
